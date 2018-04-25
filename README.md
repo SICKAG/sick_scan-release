@@ -1,3 +1,26 @@
+## sick_scan (indigo) - 0.0.12-0
+
+The packages in the `sick_scan` repository were released into the `indigo` distro by running `/usr/bin/bloom-release sick_scan --rosdistro indigo --track indigo` on `Wed, 25 Apr 2018 19:02:21 -0000`
+
+The `sick_scan` package was released.
+
+Version of package(s) in repository `sick_scan`:
+
+- upstream repository: https://github.com/SICKAG/sick_scan.git
+- release repository: https://github.com/SICKAG/sick_scan-release.git
+- rosdistro version: `0.0.11-0`
+- old version: `0.0.11-0`
+- new version: `0.0.12-0`
+
+Versions of tools used:
+
+- bloom version: `0.6.2`
+- catkin_pkg version: `0.3.6`
+- rosdep version: `0.11.8`
+- rosdistro version: `0.6.4`
+- vcstools version: `0.1.39`
+
+
 ## sick_scan (kinetic) - 0.0.12-0
 
 The packages in the `sick_scan` repository were released into the `kinetic` distro by running `/usr/bin/bloom-release sick_scan --rosdistro kinetic --track kinetic` on `Wed, 25 Apr 2018 16:56:43 -0000`
