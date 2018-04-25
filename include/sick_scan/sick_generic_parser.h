@@ -38,6 +38,8 @@
 #define SICK_SCANNER_LMS_1XXX_NAME "sick_lms_1xxx"
 #define SICK_SCANNER_MRS_1XXX_NAME "sick_mrs_1xxx"
 #define SICK_SCANNER_TIM_5XX_NAME "sick_tim_5xx"
+#define SICK_SCANNER_LMS_5XX_NAME "sick_lms_5xx"
+#define SICK_SCANNER_LMS_1XX_NAME "sick_lms_1xx"
 #define SICK_SCANNER_MRS_6XXX_NAME "sick_mrs_6xxx"
 #include "abstract_parser.h"
 
@@ -62,6 +64,10 @@ namespace sick_scan
 		double getElevationDegreeResolution(void);
 		double getAngularDegreeResolution(void);
 		double getExpectedFrequency(void);
+		bool getUseBinaryProtocol(void);
+		void setUseBinaryProtocol(bool _useBinary);
+		void setIntensityResolutionIs16Bit(bool _IntensityResolutionIs16Bit);
+		bool getIntensityResolutionIs16Bit(void);
       void setExpectedFrequency(double _freq);
 		ScannerBasicParam();
 	private:
@@ -72,6 +78,8 @@ namespace sick_scan
 		double elevationDegreeResolution;
 		double angleDegressResolution;
       double expectedFrequency;
+	  bool useBinaryProtocol;
+	  bool IntensityResolutionIs16Bit;
 	};
 
 
