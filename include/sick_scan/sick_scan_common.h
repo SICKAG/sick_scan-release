@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2013, Osnabrück University
+ * Copyright (C) 2017, Ing.-Buero Dr. Michael Lehning, Hildesheim
+ * Copyright (C) 2017, SICK AG, Waldkirch
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,13 +33,14 @@
  *      Authors:
  *         Jochen Sprickerhof <jochen@sprickerhof.de>
  *         Martin Günther <mguenthe@uos.de>
+ *         Michael Lehning <michael.lehning@lehning.de>
  *
  * Based on the TiM communication example by SICK AG.
  *
  */
 
-#ifndef SICK_TIM3XX_COMMON_H_
-#define SICK_TIM3XX_COMMON_H_
+#ifndef SICK_SCAN_COMMON_H_
+#define SICK_SCAN_COMMON_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,12 +56,15 @@
 
 #include <diagnostic_updater/diagnostic_updater.h>
 #include <diagnostic_updater/publisher.h>
+#include <sick_scan/sick_scan_common_nw.h>
+
 
 #ifndef _MSC_VER
 #include <dynamic_reconfigure/server.h>
 #include <sick_scan/SickScanConfig.h>
 #endif
 #include "sick_scan/sick_generic_parser.h"
+#include "sick_scan/sick_scan_common_nw.h"
 
 namespace sick_scan
 {
@@ -68,7 +74,8 @@ namespace sick_scan
 	public:
 		enum SOPAS_CMD
 		{
-			CMD_DEVICE_IDENT,
+			CMD_DEVICE_IDENT_LEGACY,
+			CMD_DEVICE_IDENT,  // for MRS6124
 			CMD_SERIAL_NUMBER,
 			CMD_FIRMWARE_VERSION,
 			CMD_DEVICE_STATE,
@@ -87,25 +94,38 @@ namespace sick_scan
 			CMD_GET_OUTPUT_RANGES,
 			CMD_RUN,
 			CMD_GET_PARTIAL_SCANDATA_CFG,
-        CMD_SET_PARTIAL_SCANDATA_CFG,
+			CMD_SET_PARTIAL_SCANDATA_CFG,
 			CMD_STOP_SCANDATA,
 			CMD_START_SCANDATA,
 			CMD_START_MEASUREMENT,
-        CMD_STOP_MEASUREMENT,
-        CMD_SET_ECHO_FILTER,
+			CMD_STOP_MEASUREMENT,
+			CMD_SET_ECHO_FILTER,
+			CMD_SET_TO_COLA_A_PROTOCOL,  //		sWN EIHstCola 1  // Cola B 	sWN EIHstCola 0  // Cola A 
+			CMD_SET_TO_COLA_B_PROTOCOL,  // 
 			// ML: Add above new CMD-Identifier
 			//
 			//
 			CMD_END // CMD_END is a tag for end of enum - never (re-)move it. It must be the last element.
 		};
-
+// --- START KEYWORD DEFINITIONS ---
+#define PARAM_MIN_ANG "min_ang"
+#define PARAM_MAX_ANG "max_ang"
+#define PARAM_RES_ANG "res_ang"
+// --- END KEYWORD DEFINITIONS ---
 
 		SickScanCommon(SickGenericParser* parser);
 		virtual ~SickScanCommon();
-		int setIpAddress(std::string ipAddress);
+
 		int setParticleFilter(bool _active, int _particleThreshold);//actualy only 500 mm is working.
-		std::string generateExpectedAnswerString(const std::string requestStr);
-		int sendSopasAndCheckAnswer(std::string request, std::vector<unsigned char> *reply, int cmdId = -1);
+		/*! Changes the Identifier of a commandstr. to its expected answer counterpart
+		 *
+		 * @param requestStr sent request string
+		 * @return Expected answer
+		 */
+		std::string generateExpectedAnswerString(const std::vector<unsigned char> requestStr);
+		int sendSopasAndCheckAnswer(std::string request, std::vector<unsigned char> *reply, int cmdId);
+		int sendSopasAndCheckAnswer(std::vector<unsigned char> request, std::vector<unsigned char> *reply, int cmdId);
+
 		int setAligmentMode(int _AligmentMode);
 		int setMeanFilter(bool _active, int _numberOfScans);
 		int setApplicationMode(bool _active, int _mode); //0=RANG (Ranging) 1=FEVL (Field Application).
@@ -116,13 +136,17 @@ namespace sick_scan
 		bool testsetAligmentMode();
 		bool testsetActivateStandBy();
 		bool testsetApplicationMode();
+		int getReadTimeOutInMs();
+		void setReadTimeOutInMs(int timeOutInMs);
+		int getProtocolType(void);
+		void setProtocolType(SopasProtocol cola_dialect_id);
 		virtual int init();
 		int loopOnce();
 		void check_angle_range(SickScanConfig &conf);
 		void update_config(sick_scan::SickScanConfig &new_config, uint32_t level = 0);
 
 		double get_expected_frequency() const { return expectedFrequency_; }
-		int convertAscii2BinaryCmd(const char *requestAscii, std::vector<char>* requestBinary);
+		int convertAscii2BinaryCmd(const char *requestAscii, std::vector<unsigned char>* requestBinary);
 		int init_cmdTables();
 
 		/// Send a SOPAS command to the scanner that should cause a soft reset
@@ -130,13 +154,38 @@ namespace sick_scan
 		 * \returns true if reboot command was accepted, false otherwise
 		 */
 		virtual bool rebootScanner();
-
+		/// Send a SOPAS command to the scanner that logs in the authorized client
+		/**
+		 * \returns true if user change was accepted, false otherwise
+		 */
 		bool switchToAuthorizeClient();
+		/// Send a SOPAS command to the scanner that stops measurement data Output "sEN LMDscandata 0"
+		/**
+		 * \returns true if command was accepted, false otherwise
+		 */
 		bool stopScanData();
+		/// Send a SOPAS command to the scanner that srats measurement data Output "sEN LMDscandata 1"
+		/**
+		 * \returns true if command was accepted, false otherwise
+		 */
 		bool startScanData();
+		/// Send a SOPAS command to the scanner that stops measurement"sMN LMCstopmeas"
+		/**
+		 * \returns true if command was accepted, false otherwise
+		 */
 		bool stopMeasurement();
+
+		/** Send a SOPAS command to the scanner that loggs out the service user and changes the state to running.
+		 * Use this command to leave after setup "sMN Run"
+		 * \returns true if command was accepted, false otherwise
+		 */
 		bool run();
-		bool startMeasurement();
+		/// Send a SOPAS command to the scanner that start active measurement and rotation/laser "sMN LMCstartmeas"
+		/**
+		 * \returns true if command was accepted, false otherwise
+		 */
+
+		SickScanCommonNw m_nw;
 	protected:
 		virtual int init_device() = 0;
 		virtual int init_scanner();
@@ -147,29 +196,52 @@ namespace sick_scan
 		/**
 		 * \param [in] request the command to send.
 		 * \param [out] reply if not NULL, will be filled with the reply package to the command.
+		 * \param [in] cmdLen Length of the Comandstring in bytes used for Binary Mode only
 		 */
-		virtual int sendSOPASCommand(const char* request, std::vector<unsigned char> * reply) = 0;
+		virtual int sendSOPASCommand(const char* request, std::vector<unsigned char> * reply, int cmdLen = -1) = 0;
 		/// Read a datagram from the device.
 		/**
 		 * \param [in] receiveBuffer data buffer to fill
 		 * \param [in] bufferSize max data size to write to buffer (result should be 0 terminated)
 		 * \param [out] actual_length the actual amount of data written
+		 * \param [in] isBinaryProtocol used Communication protocol True=Binary false=ASCII
 		 */
-		virtual int get_datagram(unsigned char* receiveBuffer, int bufferSize, int* actual_length) = 0;
+		virtual int get_datagram(unsigned char* receiveBuffer, int bufferSize, int* actual_length, bool isBinaryProtocol) = 0;
 
 		/// Converts reply from sendSOPASCommand to string
 		/**
 		 * \param [in] reply reply from sendSOPASCommand
 		 * \returns reply as string with special characters stripped out
 		 */
-		static std::string replyToString(const std::vector<unsigned char> &reply);
+		std::string replyToString(const std::vector<unsigned char> &reply);
+		/**
+		* \param [in] *vecArr to (unsigned) char buffer in big endian byte oder (MSB first)
+		*
+		* \returns    unsigned long value as interpretation of big endian long value
+		*/
+		unsigned long convertBigEndianCharArrayToUnsignedLong(const unsigned char *vecArr);
 
+		/**
+		* \param [in] reply check reply whether is SOPAS-ASCII or SOPAS-Binary
+		*
+		* \returns    -1 if ascii otherwise the length of data content following offset 8
+		*/
+		int checkForBinaryAnswer(const std::vector<unsigned char>* reply);
+
+		/*!
+		\brief check the identification string
+		\param identStr string (got from sopas request)
+		\return true, if this driver supports the scanner identified by the identification string
+		*/
 		bool isCompatibleDevice(const std::string identStr) const;
 
-	protected:
+		bool dumpDatagramForDebugging(unsigned char *buffer, int bufLen);
+
 		diagnostic_updater::Updater diagnostics_;
 
+
 	private:
+		SopasProtocol m_protocolId;
 		// ROS
 		ros::NodeHandle nh_;
 		ros::Publisher pub_;
@@ -197,11 +269,14 @@ namespace sick_scan
 		std::vector<std::string> sopasCmdVec;
 		std::vector<std::string> sopasCmdMaskVec;
 		std::vector<std::string> sopasReplyVec;
+		std::vector<std::vector<unsigned char> > sopasReplyBinVec;
 		std::vector<std::string> sopasReplyStrVec;
 		std::vector<std::string> sopasCmdErrMsg;
 		std::vector<int> sopasCmdChain;
 
-    int  outputChannelFlagId;
+		int  outputChannelFlagId;
+		bool checkForProtocolChangeAndMaybeReconnect(bool& useBinaryCmdNow);
+		int readTimeOutInMs;
 	};
 
 } /* namespace sick_scan */
