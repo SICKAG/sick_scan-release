@@ -1,0 +1,13 @@
+Source: ros-kinetic-sick-scan
+Section: misc
+Priority: extra
+Maintainer: Michael Lehning <michael.lehning@lehning.de>
+Build-Depends: debhelper (>= 9.0.0), ros-kinetic-catkin, ros-kinetic-diagnostic-updater, ros-kinetic-dynamic-reconfigure, ros-kinetic-roscpp, ros-kinetic-sensor-msgs
+Homepage: http://wiki.ros.org/sick_scan
+Standards-Version: 3.9.2
+
+Package: ros-kinetic-sick-scan
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-kinetic-diagnostic-updater, ros-kinetic-dynamic-reconfigure, ros-kinetic-roscpp, ros-kinetic-sensor-msgs
+Description: A ROS driver for the SICK TiM and SICK MRS series of laser scanners.
+ This package is based on the original sick_tim-repository of Martin Günther et al.
