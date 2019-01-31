@@ -1,36 +1,23 @@
 /**
 * \file
 * \brief Laser Scanner Entry Point
- *
-* Copyright (C) 2018,2017, Ing.-Buero Dr. Michael Lehning, Hildesheim
-* Copyright (C) 2018,2017, SICK AG, Waldkirch
 *
-* All rights reserved.
+* Copyright (C) 2019,2018,2017, Ing.-Buero Dr. Michael Lehning, Hildesheim
+* Copyright (C) 2019,2018,2017, SICK AG, Waldkirch
 *
-* This class provides an interface for TCP/IP communication.
-* It also contains simple methods for accessing the essential contents of the SOPAS message
-* (for example, determining the payload and the SOPAS command used).
-* It based on an example of SICK AG.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 *
-* Doxygen example: http://www-numi.fnal.gov/offline_software/srt_public_context/WebDocs/doxygen-howto.html
+*       http://www.apache.org/licenses/LICENSE-2.0
 *
-*/
-
-/**
-* \file
-* \brief Entry Point
- *
-* Copyright (C) 2018,2017, Ing.-Buero Dr. Michael Lehning, Hildesheim
-* Copyright (C) 2018,2017, SICK AG, Waldkirch
+*   Unless required by applicable law or agreed to in writing, software
+*   distributed under the License is distributed on an "AS IS" BASIS,
+*   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*   See the License for the specific language governing permissions and
+*   limitations under the License.
 *
-* All rights reserved.
-* \class SickScanCommonNw
 *
-* \brief Interface for TCP/IP
-*
-* Copyright (C) 2013, Osnabrück University
-* Copyright (C) 2017, Ing.-Buero Dr. Michael Lehning, Hildesheim
-* Copyright (C) 2017, SICK AG, Waldkirch
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -63,7 +50,7 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 *
-*  Last modified: 12th Dec 2017
+*  Last modified: 21st Aug 2018
 *
 *      Authors:
 *         Michael Lehning <michael.lehning@lehning.de>
@@ -72,6 +59,13 @@
 *
 * Based on the TiM communication example by SICK AG.
 *
+*
+*
+*  Copyright 2018 SICK AG
+*  Copyright 2018 Ing.-Büro Dr. Michael Lehning
+
+
+
 */
 
 #include <stdio.h>
@@ -79,6 +73,7 @@
 #include <string.h>
 
 #include "sick_scan/sick_generic_laser.h"
+#include "sick_scan/sick_generic_imu.h"
 #include "sick_scan/binScanf.hpp"
 #include "sick_scan/binPrintf.hpp"
 
@@ -89,14 +84,28 @@
 #define MAX_NAME_LEN (1024)
 
 // 001.001.000 Switch to multithreaded processing of data
-#define SICK_GENERIC_MAJOR_VER "001"
-#define SICK_GENERIC_MINOR_VER "001"  
-#define SICK_GENERIC_PATCH_LEVEL "001"
-
 // 001.001.001: Documentation added
+// 001.002.001: Bug in bin_scanf fixed (number of counted arguments was always 1)
+// 001.002.002: MRS1xxx/LMS1xxx - legacy device ident cmd. changed to new device ident cmd
+// 001.002.003: MRS1xxx/LMS1xxx - support of hector_slam integrated
+// 001.002.004: RMS3xx - profiling and radar support optimized
+// 001.002.005: Startup process changed to state machine
+// 001.002.006: Signal handler for ctrl-c added
+// 001.002.007: Fix for multi echo handling with lookup table
+// 001.002.008: IMU Parser structure added
+// 001.002.009: Application setting modified for MRS1104
+// 001.002.010: First version of IMU parser
+// 001.002.011: Ip Address change added, bugfixing
+// 001.003.000: Jan 2019  relase 0.0.14
+
+#define SICK_GENERIC_MAJOR_VER "001"
+#define SICK_GENERIC_MINOR_VER "003"
+#define SICK_GENERIC_PATCH_LEVEL "000"
+
 #include <algorithm> // for std::min
 
 
+std::string getVersionInfo();
 /*!
 \brief Startup routine - if called with no argmuments we assume debug session.
        Set scanner name variable by parsing for "__name:=". This will be changed in the future
@@ -115,6 +124,8 @@ int main(int argc, char **argv)
 	int argc_tmp;
 	std::string scannerName = "????";
 
+	sick_scan::SickScanImu::imuParserTest();
+
 	argc_tmp = argc;
 	argv_tmp = argv;
 
@@ -122,24 +133,35 @@ int main(int argc, char **argv)
 	char nameTagVal[MAX_STR_LEN] = { 0 };
 	char logTagVal[MAX_STR_LEN] = { 0 };
 	char internalDebugTagVal[MAX_STR_LEN] = { 0 };
+	char sensorEmulVal[MAX_STR_LEN] = { 0 };
 
 	if (argc == 1) // just for testing without calling by roslaunch
 	{
-		//strcpy(nameTagVal, "__name:=sick_tim_5xx");
-		strcpy(nameTagVal, "__name:=sick_mrs_6xxx");
-		// strcpy(nameTagVal, "__name:=sick_mrs_1xxx"); // dann IP-Adresse auf ...2 stellen
+		// recommended call for internal debugging as an example: __name:=sick_rms_320 __internalDebug:=1
+		// strcpy(nameTagVal, "__name:=sick_rms_3xx");  // sick_rms_320 -> radar
+		strcpy(nameTagVal, "__name:=sick_tim_5xx");  // sick_rms_320 -> radar
 		strcpy(logTagVal, "__log:=/tmp/tmp.log");
 		strcpy(internalDebugTagVal, "__internalDebug:=1");
-		argc_tmp = 4;
+		// strcpy(sensorEmulVal, "__emulSensor:=1");
+        strcpy(sensorEmulVal, "__emulSensor:=0");
+		argc_tmp = 5;
 		argv_tmp = (char **)malloc(sizeof(char *) * argc_tmp);
 
 		argv_tmp[0] = argv[0];
 		argv_tmp[1] = nameTagVal;
 		argv_tmp[2] = logTagVal;
 		argv_tmp[3] = internalDebugTagVal;
+		argv_tmp[4] = sensorEmulVal;
 
 	}
-    ROS_INFO("sick_generic_caller V. %s.%s.%s", SICK_GENERIC_MAJOR_VER, SICK_GENERIC_MINOR_VER, SICK_GENERIC_PATCH_LEVEL);
+  //
+	std::string versionInfo = "sick_generic_caller V. ";
+	versionInfo += std::string(SICK_GENERIC_MAJOR_VER) + '.';
+	versionInfo += std::string(SICK_GENERIC_MINOR_VER) + '.';
+	versionInfo += std::string(SICK_GENERIC_PATCH_LEVEL);
+
+	setVersionInfo(versionInfo);
+  ROS_INFO("%s", versionInfo.c_str());
 	for (int i = 0; i < argc_tmp; i++)
 	{
 		if (strstr(argv_tmp[i], nameId) == argv_tmp[i])
