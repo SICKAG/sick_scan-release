@@ -48,6 +48,8 @@
 #include <string.h>
 #include <vector>
 
+#include <boost/asio.hpp>
+
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud.h>
@@ -66,6 +68,9 @@
 #include "sick_scan/sick_generic_parser.h"
 #include "sick_scan/sick_scan_common_nw.h"
 
+
+void swap_endian(unsigned char *ptr, int numBytes);
+
 namespace sick_scan
 {
 
@@ -77,6 +82,8 @@ namespace sick_scan
 			CMD_DEVICE_IDENT_LEGACY,
 			CMD_DEVICE_IDENT,  // for MRS6124
 			CMD_SERIAL_NUMBER,
+			CMD_REBOOT,
+			CMD_WRITE_EEPROM,
 			CMD_FIRMWARE_VERSION,
 			CMD_DEVICE_STATE,
 			CMD_OPERATION_HOURS,
@@ -87,6 +94,7 @@ namespace sick_scan
 			CMD_SET_MEAN_FILTER,
 			CMD_ALIGNMENT_MODE,
 			CMD_APPLICATION_MODE,
+      CMD_APPLICATION_MODE_FIELD_ON,
 			CMD_APPLICATION_MODE_FIELD_OFF,
 			CMD_APPLICATION_MODE_RANGING_ON,
 			CMD_SET_ACCESS_MODE_3,
@@ -97,9 +105,30 @@ namespace sick_scan
 			CMD_SET_PARTIAL_SCANDATA_CFG,
 			CMD_STOP_SCANDATA,
 			CMD_START_SCANDATA,
+			CMD_START_RADARDATA,
+
+      CMD_START_IMU_DATA, // start of IMU data
+      CMD_STOP_IMU_DATA, // start of IMU data
+
+        // start of radar specific commands
+			CMD_SET_TRANSMIT_RAWTARGETS_ON,  // transmit raw target for radar
+  		CMD_SET_TRANSMIT_RAWTARGETS_OFF, // do not transmit raw target for radar
+
+      CMD_SET_TRANSMIT_OBJECTS_ON,  // transmit raw target for radar
+      CMD_SET_TRANSMIT_OBJECTS_OFF, // do not transmit raw target for radar
+
+			CMD_SET_TRACKING_MODE_0,  // set radar tracking mode to "BASIC"
+			CMD_SET_TRACKING_MODE_1,  // set radar tracking mode to "TRAFFIC"
+
+      CMD_LOAD_APPLICATION_DEFAULT, // load application default
+      CMD_DEVICE_TYPE,
+      CMD_ORDER_NUMBER,
+      // end of radar specific commands
 			CMD_START_MEASUREMENT,
 			CMD_STOP_MEASUREMENT,
 			CMD_SET_ECHO_FILTER,
+            CMD_SET_IP_ADDR,
+            CMD_SET_GATEWAY,
 			CMD_SET_TO_COLA_A_PROTOCOL,  //		sWN EIHstCola 1  // Cola B 	sWN EIHstCola 0  // Cola A 
 			CMD_SET_TO_COLA_B_PROTOCOL,  // 
 			// ML: Add above new CMD-Identifier
@@ -112,6 +141,7 @@ namespace sick_scan
 #define PARAM_MAX_ANG "max_ang"
 #define PARAM_RES_ANG "res_ang"
 // --- END KEYWORD DEFINITIONS ---
+
 
 		SickScanCommon(SickGenericParser* parser);
 		virtual ~SickScanCommon();
@@ -154,39 +184,35 @@ namespace sick_scan
 		 * \returns true if reboot command was accepted, false otherwise
 		 */
 		virtual bool rebootScanner();
-		/// Send a SOPAS command to the scanner that logs in the authorized client
-		/**
-		 * \returns true if user change was accepted, false otherwise
-		 */
-		bool switchToAuthorizeClient();
-		/// Send a SOPAS command to the scanner that stops measurement data Output "sEN LMDscandata 0"
-		/**
-		 * \returns true if command was accepted, false otherwise
-		 */
-		bool stopScanData();
-		/// Send a SOPAS command to the scanner that srats measurement data Output "sEN LMDscandata 1"
-		/**
-		 * \returns true if command was accepted, false otherwise
-		 */
-		bool startScanData();
-		/// Send a SOPAS command to the scanner that stops measurement"sMN LMCstopmeas"
-		/**
-		 * \returns true if command was accepted, false otherwise
-		 */
-		bool stopMeasurement();
 
-		/** Send a SOPAS command to the scanner that loggs out the service user and changes the state to running.
-		 * Use this command to leave after setup "sMN Run"
-		 * \returns true if command was accepted, false otherwise
-		 */
-		bool run();
-		/// Send a SOPAS command to the scanner that start active measurement and rotation/laser "sMN LMCstartmeas"
+		/// Send a SOPAS command to the scanner that logs in the authorized client, changes the ip adress and the reboots the scanner
 		/**
-		 * \returns true if command was accepted, false otherwise
+		 * \param IpAdress new IP adress
+		 * \returns true if ip was changed and scanner is rebooting
 		 */
+		bool changeIPandreboot(boost::asio::ip::address_v4 IpAdress);
 
 		SickScanCommonNw m_nw;
-	protected:
+
+		SickScanConfig* getConfigPtr()
+		{
+			return(&config_);
+		}
+
+		// move back to private
+				/* FÜR MRS10000 brauchen wir einen Publish und eine NAchricht */
+				// Should we publish laser or point cloud?
+				// ros::Publisher cloud_pub_;
+				ros::Publisher cloud_pub_;
+				ros::Publisher cloud_radar_rawtarget_pub_;
+				ros::Publisher cloud_radar_track_pub_;
+				ros::Publisher radarScan_pub_;
+				ros::Publisher  imuScan_pub_;
+				// sensor_msgs::PointCloud cloud_;
+				sensor_msgs::PointCloud2 cloud_;
+		//////
+
+		protected:
 		virtual int init_device() = 0;
 		virtual int init_scanner();
 		virtual int stop_scanner();
@@ -201,12 +227,14 @@ namespace sick_scan
 		virtual int sendSOPASCommand(const char* request, std::vector<unsigned char> * reply, int cmdLen = -1) = 0;
 		/// Read a datagram from the device.
 		/**
+		 * \param [out] recvTimeStamp timestamp of received packet
 		 * \param [in] receiveBuffer data buffer to fill
 		 * \param [in] bufferSize max data size to write to buffer (result should be 0 terminated)
 		 * \param [out] actual_length the actual amount of data written
 		 * \param [in] isBinaryProtocol used Communication protocol True=Binary false=ASCII
 		 */
-		virtual int get_datagram(unsigned char* receiveBuffer, int bufferSize, int* actual_length, bool isBinaryProtocol) = 0;
+		virtual int get_datagram(ros::Time &recvTimeStamp, unsigned char *receiveBuffer, int bufferSize, int *actual_length,
+                             bool isBinaryProtocol, int *numberOfRemainingFifoEntries) = 0;
 
 		/// Converts reply from sendSOPASCommand to string
 		/**
@@ -240,6 +268,9 @@ namespace sick_scan
 		diagnostic_updater::Updater diagnostics_;
 
 
+		// Dynamic Reconfigure
+		SickScanConfig config_;
+
 	private:
 		SopasProtocol m_protocolId;
 		// ROS
@@ -248,19 +279,12 @@ namespace sick_scan
 		ros::Publisher datagram_pub_;
 		bool publish_datagram_;
 
-		/* FÜR MRS10000 brauchen wir einen Publish und eine NAchricht */
-		  // Should we publish laser or point cloud?
-		  // ros::Publisher cloud_pub_;
-		ros::Publisher cloud_pub_;
-		// sensor_msgs::PointCloud cloud_;
-		sensor_msgs::PointCloud2 cloud_;
 
 		// Diagnostics
 		diagnostic_updater::DiagnosedPublisher<sensor_msgs::LaserScan>* diagnosticPub_;
 		double expectedFrequency_;
 
-		// Dynamic Reconfigure
-		SickScanConfig config_;
+
 #ifndef _MSC_VER
 		dynamic_reconfigure::Server<sick_scan::SickScanConfig> dynamic_reconfigure_server_;
 #endif
@@ -276,7 +300,13 @@ namespace sick_scan
 
 		int  outputChannelFlagId;
 		bool checkForProtocolChangeAndMaybeReconnect(bool& useBinaryCmdNow);
-		int readTimeOutInMs;
+		void setSensorIsRadar(bool _isRadar);
+		bool getSensorIsRadar(void);
+        bool setNewIpAddress(boost::asio::ip::address_v4 ipNewIPAddr, bool useBinaryCmd);
+
+        int readTimeOutInMs;
+private:
+	bool sensorIsRadar;
 	};
 
 } /* namespace sick_scan */
