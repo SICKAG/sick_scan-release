@@ -96,13 +96,19 @@
 // 001.002.009: Application setting modified for MRS1104
 // 001.002.010: First version of IMU parser
 // 001.002.011: Ip Address change added, bugfixing
-// 001.003.000: Jan 2019  relase 0.0.14
+// 001.003.000: Jan 2019  release 0.0.14
+// 001.003.001: Jan 2019  release 0.0.14 address handling for ip v4 parsing fixed
+// 001.003.002: Feb 2019 Fixing and optimizing console output
+// 001.003.016: Feb 2019 Profiling+instructions, Caching of Ros-Params
+
 
 #define SICK_GENERIC_MAJOR_VER "001"
 #define SICK_GENERIC_MINOR_VER "003"
-#define SICK_GENERIC_PATCH_LEVEL "000"
+#define SICK_GENERIC_PATCH_LEVEL "016"
 
 #include <algorithm> // for std::min
+
+
 
 
 std::string getVersionInfo();
@@ -124,7 +130,7 @@ int main(int argc, char **argv)
 	int argc_tmp;
 	std::string scannerName = "????";
 
-	sick_scan::SickScanImu::imuParserTest();
+	// sick_scan::SickScanImu::imuParserTest();
 
 	argc_tmp = argc;
 	argv_tmp = argv;

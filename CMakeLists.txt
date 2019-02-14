@@ -16,7 +16,10 @@ macro(use_cxx11)
 	endif ()
 endmacro(use_cxx11)
 
-use_cxx11()
+# set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++03")
+
+# Switch on, if you use c11-specific commands
+# use_cxx11()
 
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpedantic")
@@ -173,14 +176,15 @@ target_link_libraries(sick_scan_test
 #
 #  Sensor alignment tool
 #
-add_executable(sensor_alignment
-		tools/sensor_alignment/sensor_alignment_tf_dyn.cpp
-		)
-
-target_link_libraries(sensor_alignment
-		${catkin_LIBRARIES}
-		)
-add_dependencies(sensor_alignment ${PROJECT_NAME}_gencfg)
+#  currently disabled for trusty support
+# add_executable(sensor_alignment
+#		tools/sensor_alignment/sensor_alignment_tf_dyn.cpp
+#		)
+#
+# target_link_libraries(sensor_alignment
+#		${catkin_LIBRARIES}
+#		)
+# add_dependencies(sensor_alignment ${PROJECT_NAME}_gencfg)
 
 # target_link_libraries(${PROJECT_NAME}_pointcloud2_refresh
 #		${catkin_LIBRARIES}
