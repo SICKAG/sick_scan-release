@@ -38,6 +38,10 @@ ROS Device Driver for SICK laser and radar sensors - supported scanner types:
 |                    |                                                                                                                                  | Scan-Rate: 15 Hz   |                 |
 | TiM571             | [1079742](https://www.sick.com/de/en/detection-and-ranging-solutions/2d-lidar-sensors/tim5xx/tim571-2050101/p/p412444)                 | 1 layer max. range: 25m, ang. resol. 0.33 [deg]| ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 15 Hz   |                 |
+| TiM781             | [1096807](https://www.sick.com/de/de/mess-und-detektionsloesungen/2d-lidar-sensoren/tim7xx/tim781-2174101/p/p594148)                 | 1 layer max. range: 25m, ang. resol. 0.33 [deg]| ✔ [stable]|
+|                    |                                                                                                                                  | Scan-Rate: 15 Hz   |                 |
+| TiM781s            | [1096363](https://www.sick.com/de/de/mess-und-detektionsloesungen/2d-lidar-sensoren/tim7xx/tim781s-2174104/p/p594149)                 | 1 layer max. range: 25m, ang. resol. 0.33 [deg]| ✔ [stable]|
+|                    |                                                                                                                                  | Scan-Rate: 15 Hz   |                 |
 | LMS511-10100 PRO   | [e.g. 1046135](https://www.sick.com/de/en/detection-and-ranging-solutions/2d-lidar-sensors/lms5xx/c/g179651)     | 1 layer max. range: 80m, ang. resol. 0.167 [deg]| ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 100 Hz   |                 |
 | LMS1xx-Family      | [e.g. 1041114](https://www.sick.com/de/en/detection-and-ranging-solutions/2d-lidar-sensors/lms1xx/c/g91901) | 1 layer max. range: 28m, ang. resol. 0.25 [deg]| ✔ [stable]|
@@ -157,6 +161,8 @@ Overview of the tools:
  3. Sopas file of your scanner configuration.
   The instructions at http://sickusablog.com/create-and-download-a-sopas-file/ show how to create the Sopas file.
 * In case of application support please use [https://supportportal.sick.com ](https://supportportal.sick.com).
+* Issue Handling: Issues, for which no reply was received from the questioner for more than 7 days,						
+  are closed by us because we assume that the user has solved the problem.
 
 
 ## Installation
