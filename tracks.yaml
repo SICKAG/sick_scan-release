@@ -85,7 +85,7 @@ tracks:
     - git-bloom-generate -y rosrpm --prefix release/:{ros_distro} :{ros_distro} -i
       :{release_inc}
     devel_branch: null
-    last_version: 0.0.16
+    last_version: 001.003.018
     name: sick_scan
     patches: null
     release_inc: '0'
