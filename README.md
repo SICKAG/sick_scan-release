@@ -1,3 +1,26 @@
+## sick_scan (kinetic) - 1.4.2-1
+
+The packages in the `sick_scan` repository were released into the `kinetic` distro by running `/usr/bin/bloom-release sick_scan --rosdistro kinetic --track kinetic` on `Thu, 14 Nov 2019 11:27:44 -0000`
+
+The `sick_scan` package was released.
+
+Version of package(s) in repository `sick_scan`:
+
+- upstream repository: https://github.com/SICKAG/sick_scan.git
+- release repository: https://github.com/SICKAG/sick_scan-release.git
+- rosdistro version: `1.3.21-0`
+- old version: `1.3.21-1`
+- new version: `1.4.2-1`
+
+Versions of tools used:
+
+- bloom version: `0.9.0`
+- catkin_pkg version: `0.4.14`
+- rosdep version: `0.17.0`
+- rosdistro version: `0.7.5`
+- vcstools version: `0.1.42`
+
+
 ## sick_scan (melodic) - 1.4.2-1
 
 The packages in the `sick_scan` repository were released into the `melodic` distro by running `/usr/bin/bloom-release sick_scan --rosdistro melodic --track melodic` on `Thu, 14 Nov 2019 11:22:44 -0000`
