@@ -36,12 +36,12 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 *
-*  Last modified: 12th Dec 2017
+*  Last modified: 05th Nov 2019
 *
 *      Authors:
 *              Michael Lehning <michael.lehning@lehning.de>
-*         Jochen Sprickerhof <jochen@sprickerhof.de>
-*         Martin Günther <mguenthe@uos.de>
+*              Jochen Sprickerhof <jochen@sprickerhof.de>
+*              Martin Günther <mguenthe@uos.de>
 *
 * Based on the TiM communication example by SICK AG.
 *
@@ -63,6 +63,7 @@
 
 namespace sick_scan
 {
+	using namespace std;
 
 	/*!
 	\brief Setting name (type) of scanner
@@ -288,9 +289,24 @@ namespace sick_scan
 	{
 		return(IntensityResolutionIs16Bit);
 	}
-
-
-
+	/*!
+	\brief flag to mark the device uses the safety scanner password
+	\param  _useSafetyPasWD: false for normal scanners true for safety scanners
+	\sa setUseSafetyPasWD
+	*/
+	void ScannerBasicParam::setUseSafetyPasWD(bool _useSafetyPasWD)
+{
+	this->useSafetyPasWD = _useSafetyPasWD;
+}
+	/*!
+	\brief flag to mark the device uses the safety scanner password
+	\reutrn Bool true for safety password false for normal password
+	\sa getUseSafetyPasWD
+	*/
+bool ScannerBasicParam::getUseSafetyPasWD()
+{
+	return(useSafetyPasWD);
+}
 	/*!
 	\brief Construction of parameter object
 
@@ -299,6 +315,26 @@ namespace sick_scan
 	{
 		this->elevationDegreeResolution = 0.0;
 		this->setUseBinaryProtocol(false);
+	}
+
+	/*!
+\brief Prama for encoder mode
+\param _EncoderMode: -1 Use for Scanners WO Encoder 00 disabled 01 single increment 02 direction recognition phase 03 direction recognition level
+\sa setEncoderMode
+*/
+	void ScannerBasicParam::setEncoderMode(int8_t _encoderMode)
+	{
+		this->encoderMode = _encoderMode;
+	}
+	/*!
+	/*!
+\brief Getter-Method for encoder mode
+\return EncoderMode:-1 Use for Scanners WO Encoder  00 disabled 01 single increment 02 direction recognition phase 03 direction recognition level
+\sa setEncoderMode
+	*/
+	int8_t ScannerBasicParam::getEncoderMode()
+	{
+		return(encoderMode);
 	}
 
 	/*!
@@ -316,13 +352,15 @@ namespace sick_scan
 		allowedScannerNames.push_back(SICK_SCANNER_MRS_1XXX_NAME);
 		allowedScannerNames.push_back(SICK_SCANNER_TIM_5XX_NAME);
 		allowedScannerNames.push_back(SICK_SCANNER_TIM_7XX_NAME);
+    allowedScannerNames.push_back(SICK_SCANNER_TIM_7XXS_NAME);
 		allowedScannerNames.push_back(SICK_SCANNER_LMS_5XX_NAME);
 		allowedScannerNames.push_back(SICK_SCANNER_LMS_1XX_NAME);
 		allowedScannerNames.push_back(SICK_SCANNER_LMS_1XXX_NAME);
 		allowedScannerNames.push_back(SICK_SCANNER_MRS_6XXX_NAME);
+		allowedScannerNames.push_back(SICK_SCANNER_LMS_4XXX_NAME);
 		allowedScannerNames.push_back(SICK_SCANNER_RMS_3XX_NAME); // Radar scanner
 		basicParams.resize(allowedScannerNames.size()); // resize to number of supported scanner types
-		for (int i = 0; i < basicParams.size(); i++) // set specific parameter for each scanner type - scanner type is identified by name
+		for (int i = 0; i < (int)basicParams.size(); i++) // set specific parameter for each scanner type - scanner type is identified by name
 		{
 			basicParams[i].setDeviceIsRadar(false); // Default
 			basicParams[i].setScannerName(allowedScannerNames[i]);  // set scanner type for this parameter object
@@ -337,6 +375,8 @@ namespace sick_scan
 				basicParams[i].setExpectedFrequency(50.0);
 				basicParams[i].setUseBinaryProtocol(true);
 				basicParams[i].setDeviceIsRadar(false); // Default
+				basicParams[i].setUseSafetyPasWD(false); // Default
+				basicParams[i].setEncoderMode(-1); // Default
 			}
 			if (basicParams[i].getScannerName().compare(SICK_SCANNER_LMS_1XXX_NAME) == 0)  // LMS1000 - 4 layer, 1101 shots per scan
 			{
@@ -348,6 +388,8 @@ namespace sick_scan
 				basicParams[i].setExpectedFrequency(50.0);
 				basicParams[i].setUseBinaryProtocol(true);
 				basicParams[i].setDeviceIsRadar(false); // Default
+				basicParams[i].setUseSafetyPasWD(false); // Default
+				basicParams[i].setEncoderMode(-1); // Default
 			}
 			if (basicParams[i].getScannerName().compare(SICK_SCANNER_TIM_5XX_NAME) == 0) // TIM_5xx - 1 Layer, max. 811 shots per scan
       {
@@ -358,8 +400,22 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(15.0);
         basicParams[i].setUseBinaryProtocol(true);
 				basicParams[i].setDeviceIsRadar(false); // Default
+				basicParams[i].setUseSafetyPasWD(false); // Default
+				basicParams[i].setEncoderMode(-1); // Default
 			}
-			if (basicParams[i].getScannerName().compare(SICK_SCANNER_TIM_7XX_NAME) == 0) // TIM_5xx - 1 Layer, max. 811 shots per scan
+			if (basicParams[i].getScannerName().compare(SICK_SCANNER_LMS_4XXX_NAME) == 0) // LMS_4xxx - 1 Layer, 600 Hz
+			{
+				basicParams[i].setNumberOfMaximumEchos(1);
+				basicParams[i].setNumberOfLayers(1);
+				basicParams[i].setNumberOfShots(841);//
+				basicParams[i].setAngularDegreeResolution(0.0833);//
+				basicParams[i].setExpectedFrequency(600.0);
+				basicParams[i].setUseBinaryProtocol(true);
+				basicParams[i].setDeviceIsRadar(false); // Default
+				basicParams[i].setUseSafetyPasWD(false); // Default
+				basicParams[i].setEncoderMode(-1); // Default
+			}
+			if (basicParams[i].getScannerName().compare(SICK_SCANNER_TIM_7XX_NAME) == 0) // TIM_7xx - 1 Layer Scanner
 			{
 				basicParams[i].setNumberOfMaximumEchos(1);
 				basicParams[i].setNumberOfLayers(1);
@@ -368,7 +424,21 @@ namespace sick_scan
 				basicParams[i].setExpectedFrequency(15.0);
 				basicParams[i].setUseBinaryProtocol(true);
 				basicParams[i].setDeviceIsRadar(false); // Default
+				basicParams[i].setUseSafetyPasWD(false); // Default
+				basicParams[i].setEncoderMode(-1); // Default
 			}
+      if (basicParams[i].getScannerName().compare(SICK_SCANNER_TIM_7XXS_NAME) == 0) // TIM_7xxS - 1 layer Safety Scanner
+      {
+        basicParams[i].setNumberOfMaximumEchos(1);
+        basicParams[i].setNumberOfLayers(1);
+        basicParams[i].setNumberOfShots(811);
+        basicParams[i].setAngularDegreeResolution(0.3333);
+        basicParams[i].setExpectedFrequency(15.0);
+        basicParams[i].setUseBinaryProtocol(true);
+        basicParams[i].setDeviceIsRadar(false); // Default
+				basicParams[i].setUseSafetyPasWD(true); // Safety scanner
+				basicParams[i].setEncoderMode(-1); // Default
+      }
       if (basicParams[i].getScannerName().compare(SICK_SCANNER_LMS_5XX_NAME) == 0) // LMS_5xx - 1 Layer
       {
         basicParams[i].setNumberOfMaximumEchos(1);
@@ -378,16 +448,20 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(15.0);
         basicParams[i].setUseBinaryProtocol(true);
 				basicParams[i].setDeviceIsRadar(false); // Default
+				basicParams[i].setUseSafetyPasWD(false); // Default
+				basicParams[i].setEncoderMode(-1); // Default
 			}
       if (basicParams[i].getScannerName().compare(SICK_SCANNER_LMS_1XX_NAME) == 0) // LMS_1xx - 1 Layer
       {
         basicParams[i].setNumberOfMaximumEchos(1);
         basicParams[i].setNumberOfLayers(1);
-        basicParams[i].setNumberOfShots(1141);
+        basicParams[i].setNumberOfShots(541);
         basicParams[i].setAngularDegreeResolution(0.5);
         basicParams[i].setExpectedFrequency(25.0);
         basicParams[i].setUseBinaryProtocol(true);
 				basicParams[i].setDeviceIsRadar(false); // Default
+				basicParams[i].setUseSafetyPasWD(false); // Default
+				basicParams[i].setEncoderMode(-1); // Default
 			}
 			if (basicParams[i].getScannerName().compare(SICK_SCANNER_MRS_6XXX_NAME) == 0) //
 			{
@@ -399,6 +473,8 @@ namespace sick_scan
 				basicParams[i].setExpectedFrequency(50.0);
 				basicParams[i].setUseBinaryProtocol(true);
 				basicParams[i].setDeviceIsRadar(false); // Default
+				basicParams[i].setUseSafetyPasWD(false); // Default
+				basicParams[i].setEncoderMode(-1); // Default
 			}
 
 			if (basicParams[i].getScannerName().compare(SICK_SCANNER_RMS_3XX_NAME) == 0) // Radar
@@ -411,6 +487,8 @@ namespace sick_scan
 				basicParams[i].setExpectedFrequency(0.00);
 				basicParams[i].setUseBinaryProtocol(false); // use ASCII-Protocol
 				basicParams[i].setDeviceIsRadar(true); // Device is a radar
+				basicParams[i].setUseSafetyPasWD(false); // Default
+				basicParams[i].setEncoderMode(-1); // Default
 
 			}
 
@@ -445,7 +523,7 @@ namespace sick_scan
 	int SickGenericParser::lookUpForAllowedScanner(std::string scannerName)
 	{
 		int iRet = -1;
-		for (int i = 0; i < allowedScannerNames.size(); i++)
+		for (int i = 0; i < (int)allowedScannerNames.size(); i++)
 		{
 			if (allowedScannerNames[i].compare(scannerName) == 0)
 			{
@@ -520,7 +598,7 @@ namespace sick_scan
 			if (rssiFnd || distFnd)
 			{
 				offset += 5;
-				if (offset >= fields.size())
+				if (offset >= (int)fields.size())
 				{
 					ROS_WARN("Missing RSSI or DIST data");
 					return ExitError;
@@ -557,7 +635,7 @@ namespace sick_scan
 			{
 				offset++; // necessary????
 			}
-		} while (offset < fields.size());
+		} while (offset < (int)fields.size());
 
 		return(iRet);
 	}
@@ -800,8 +878,6 @@ namespace sick_scan
 		 // 7: Telegram counter (eg. 99)
 		 // 8: Scan counter (eg. 9A)
 		 // 9: Time since startup (eg. 13C8E59)
-
-
 		 // 10: Time of transmission (eg. 13C9CBE)
 		 // 11 + 12: Input status (0 0)
 		 // 13 + 14: Output status (8 0)
