@@ -40,9 +40,11 @@
 #define SICK_SCANNER_MRS_1XXX_NAME "sick_mrs_1xxx"
 #define SICK_SCANNER_TIM_5XX_NAME "sick_tim_5xx"
 #define SICK_SCANNER_TIM_7XX_NAME "sick_tim_7xx"
+#define SICK_SCANNER_TIM_7XXS_NAME "sick_tim_7xxS"
 #define SICK_SCANNER_LMS_5XX_NAME "sick_lms_5xx"
 #define SICK_SCANNER_LMS_1XX_NAME "sick_lms_1xx"
 #define SICK_SCANNER_MRS_6XXX_NAME "sick_mrs_6xxx"
+#define SICK_SCANNER_LMS_4XXX_NAME "sick_lms_4xxx"
 #define SICK_SCANNER_RMS_3XX_NAME "sick_rms_3xx"
 #include "abstract_parser.h"
 
@@ -74,8 +76,12 @@ namespace sick_scan
 		void setDeviceIsRadar(bool _deviceIsRadar);
 		void setIntensityResolutionIs16Bit(bool _IntensityResolutionIs16Bit);
 		bool getIntensityResolutionIs16Bit(void);
-      void setExpectedFrequency(double _freq);
+		void setExpectedFrequency(double _freq);
 		ScannerBasicParam();
+		void setUseSafetyPasWD(bool _useSafetyPasWD);
+		bool getUseSafetyPasWD();
+		void setEncoderMode(int8_t _EncoderMode);
+		int8_t getEncoderMode();
 	private:
 		std::string scannerName;
 		int numberOfLayers;
@@ -83,14 +89,14 @@ namespace sick_scan
 		int numberOfMaximumEchos;
 		double elevationDegreeResolution;
 		double angleDegressResolution;
-      double expectedFrequency;
+    double expectedFrequency;
 	  bool useBinaryProtocol;
 	  bool IntensityResolutionIs16Bit;
 	  bool deviceIsRadar;
-
+	  bool useSafetyPasWD;
+	  int8_t encoderMode;
 	  bool CartographerCompatibility;
 	};
-
 
 
 	class SickGenericParser : public AbstractParser
