@@ -33,6 +33,8 @@ ROS Device Driver for SICK lidar and radar sensors - supported scanner types:
 |                    |                                                                                                                                  | Scan-Rate: 50 Hz, 4x12.5 Hz            |                 |
 | LMS1104            | [1092445](https://www.sick.com/ag/en/detection-and-ranging-solutions/2d-lidar-sensors/lms1000/c/g387151)                         | 1 layer max. range: 64 m, ang. resol. 0.25 [deg] |  ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 150 Hz, 4x37.5 Hz   |                 |
+| TiM240             | prototype [more info here](doc/tim240/tim240.md) | 1 layer max. range: unknown, ang. resol. 1.00 [deg], 240 [deg]| ✔ [prototype]|
+|                    |                                                                                                                                  | Scan-Rate: 14.4 Hz   |                 |
 | TiM551             | [1060445](https://www.sick.com/de/en/detection-and-ranging-solutions/2d-lidar-sensors/tim5xx/tim551-2050001/p/p343045)                 | 1 layer max. range: 10 m, ang. resol. 1.00[deg] | ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 15 Hz   |                 |
 | TiM561             | [1071419](https://www.sick.com/de/en/detection-and-ranging-solutions/2d-lidar-sensors/tim5xx/tim561-2050101/p/p369446)                 | 1 layer max. range: 10 m, ang. resol. 0.33 [deg]| ✔ [stable]|
@@ -47,13 +49,19 @@ ROS Device Driver for SICK lidar and radar sensors - supported scanner types:
 |                    |                                                                                                                                  | Scan-Rate: 100 Hz   |                 |
 | LMS1xx-Family      | [e.g. 1041114](https://www.sick.com/de/en/detection-and-ranging-solutions/2d-lidar-sensors/lms1xx/c/g91901) | 1 layer max. range: 28 m, ang. resol. 0.25 [deg]| ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 15 Hz   |                 |
+| NAV310     | [e.g. 1052928](https://www.sick.com/de/de/mess-und-detektionsloesungen/2d-lidar-sensoren/nav3xx/nav350-3232/p/p256041) | 1 layer max. range: 100 m, ang. resol. 0.25 [deg]| ✔ [stable]|
+|                    |                                                                                                                                  | Scan-Rate: 8 Hz   |                 |
+| NAV210+NAV245      | [e.g. 	1074308](https://www.sick.com/de/de/mess-und-detektionsloesungen/2d-lidar-sensoren/nav2xx/c/g356151) | 1 layer max. range: 100 m, ang. resol. 0.25 [deg]| ✔ [stable]|
+|                    |                                                                                                                                  | Scan-Rate: 25 Hz   |                 |
 | LMS4xxx-Family      | [e.g. 1091423](https://www.sick.com/de/de/mess-und-detektionsloesungen/2d-lidar-sensoren/lms4000/lms4111r-13000/p/p578044?ff_data) | 1 layer max. range: 3 m, ang. resol. 0,0833 [deg]| ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 600 Hz   |                 |
-| RMS3xx             | [8021530](https://cdn.sick.com/media/docs/4/04/504/Operating_instructions_RMS3xx_en_IM0075504.PDF)| Radar Sensor | ✔ [stable]|
+| NAV310-3211        | [1060834](https://www.sick.com/us/en/detection-and-ranging-solutions/2d-lidar-sensors/nav3xx/nav310-3211/p/p349345)| 1 layer max. range: 250 m, ang. resol. 0.125 [deg] | ✔ [stable]|
 |                    |                                                                                                   | Opening angle: +/- 50 [deg]   |                 |
+| RMS3xx             | [8021530](https://cdn.sick.com/media/docs/4/04/504/Operating_instructions_RMS3xx_en_IM0075504.PDF)| Radar Sensor | ✔ [stable]|
+
 
 ## IMU Support
-Devices of the MRS6xxx and MRS1xxx series will in future (2019) be available with an optionally built-in IMU.
+Devices of the MRS6xxx and MRS1xxx series are available with an optionally built-in IMU.
 Further information on the implementation and use of the experimental Imu support can be found on the [Imu page](doc/IMU.md).
 ##  Start Node
 
@@ -74,6 +82,10 @@ roslaunch sick_scan sick_mrs_1xxx.launch
 roslaunch sick_scan sick_lms_1xxx.launch
 ```
 
+- For TiM240-prototype:
+```bash
+roslaunch sick_scan sick_tim_240.launch
+```
 - For TiM5xx-family:
 ```bash
 roslaunch sick_scan sick_tim_5xx.launch
@@ -104,10 +116,17 @@ roslaunch sick_scan sick_lms_5xx.launch
 roslaunch sick_scan sick_lms_4xxx.launch
 ```
 
+- For NAV310:
+```bash
+roslaunch sick_scan sick_nav_3xx.launch
+```
+
 - For RMS3xx-family:
 ```bash
-roslaunch sick_scan sick_rms_3xx.launch (under development)
+roslaunch sick_scan sick_rms_3xx.launch (under
+opment)
 ```
+
 ### Starting Scanner with Specific Ip Address
 To start the scanner with a specific IP address, the launch command can be used for most launch files as follows.
 The hostname is the ip-address of the scanner:
@@ -125,6 +144,51 @@ roslaunch sick_scan sick_tim_5xx.launch hostname:=192.168.0.71
 
 Take the launchfile "sick_tim_5xx_twin.launch" as an example.
 Rempping the scan and cloud topics is essential to distinguish the scanndata and provide TF information.
+
+## Parameter
+
+The use of the parameters can be looked up in the launch files. This is also recommended as a starting point.
+### Common parameters
+
+- `scanner_type`
+  Name of the used scanner. Usually this is also the name of the launch file. This entry is used to differentiate
+  between the various scanner properties within the software code.
+
+- `hostname`
+  IP-address of the scanner (default: 192.168.0.1)
+
+- `port`
+  IP-port of the scanner (default: 2112)
+
+- `min_ang`
+  Start angle in [rad]
+
+- `max_ang`
+  End angle in [rad]
+
+- `use_binary_protocol`
+  Switch between SOPAS Binary and SOPAS ASCII protocol
+
+- `intensity`
+  Enable or disable transport of intensity values
+
+- `intensity_resolution_16bit`
+  If true, the intensity values is transferred as 16 bit value. If false, as 8 bit value.
+
+- `cloud_topic`
+  Topic name of the published pointcloud2 data
+
+- `frame_id`
+  Frame id used for the published data
+
+### Further useful parameters
+- `timelimit`
+  Timelimit in [sec] for max. wait time of incoming sensor reply
+
+- `sw_pll_only_publish`
+  If true, the internal Software PLL is fored to sync the scan generation time stamp to a system timestamp
+
+
 
 ## Sopas Mode
 This driver supports both COLA-B (binary) and COLA-A (ASCII) communication with the laser scanner. Binary mode is activated by default. Since this mode generates less network traffic.
@@ -184,6 +248,10 @@ Overview of the tools:
    * Try to ping scanner ip address (used in launch file)
 9. If the driver stops during init phase please stop the driver with ctrl-c and restart (could be caused due to protocol ASCII/Binary cola-dialect).
 
+## FAQ
+
+* FAQ: [doc/faq.md](doc/faq.md)
+
 ## Support
 
 * In case of technical support please open a new issue. For optimal support, add the following information to your request:
@@ -208,6 +276,19 @@ The driver is released at longer intervals as a binary package and can therefore
 
 ### From Source
 
+```bash
+source /opt/ros/<rosdistro>/setup.bash
+mkdir -p ~/ros_catkin_ws/src/
+cd ~/ros_catkin_ws/src/
+git clone git://github.com/SICKAG/sick_scan.git
+cd ..
+catkin_make install
+source ~/ros_catkin_ws/install/setup.bash
+```
+
+#### Development branch
+
+A "devel" branch is also maintained for the very latest developments and tests. Add-ons and support for brand new scanners are usually first tested in this branch and can be checked out as needed as follows:
 ```bash
 source /opt/ros/<rosdistro>/setup.bash
 mkdir -p ~/ros_catkin_ws/src/
@@ -265,6 +346,7 @@ TiM781
 TiM781S
 LMS5xx
 LMS511
+NAV310
 
 
 ## Creators
