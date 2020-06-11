@@ -1,3 +1,26 @@
+## sick_scan (noetic) - 1.6.0-1
+
+The packages in the `sick_scan` repository were released into the `noetic` distro by running `/usr/bin/bloom-release --rosdistro noetic --track noetic sick_scan` on `Thu, 11 Jun 2020 14:28:14 -0000`
+
+The `sick_scan` package was released.
+
+Version of package(s) in repository `sick_scan`:
+
+- upstream repository: https://github.com/SICKAG/sick_scan.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `1.6.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.9.3`
+- catkin_pkg version: `0.4.16`
+- rosdep version: `0.17.0`
+- rosdistro version: `0.8.0`
+- vcstools version: `0.1.42`
+
+
 ## sick_scan (kinetic) - 1.6.0-2
 
 The packages in the `sick_scan` repository were released into the `kinetic` distro by running `/usr/bin/bloom-release --rosdistro kinetic --track kinetic sick_scan` on `Thu, 11 Jun 2020 14:18:16 -0000`
