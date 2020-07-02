@@ -49,7 +49,7 @@
 #define SICK_SCANNER_RMS_3XX_NAME "sick_rms_3xx"
 #define SICK_SCANNER_NAV_3XX_NAME "sick_nav_3xx"
 #define SICK_SCANNER_NAV_2XX_NAME "sick_nav_2xx"
-
+#define SICK_SCANNER_TIM_4XX_NAME "sick_tim_4xx"
 #include "abstract_parser.h"
 
 #include "sensor_msgs/LaserScan.h"
@@ -91,9 +91,9 @@ namespace sick_scan
 
     bool getUseBinaryProtocol(void);
 
-    void setScanMirrored(bool _scanMirrored);
+    void setScanMirroredAndShifted(bool _scanMirroredAndShifted);
 
-    bool getScanMirrored();
+    bool getScanMirroredAndShifted();
 
     void setUseBinaryProtocol(bool _useBinary);
 
@@ -129,7 +129,7 @@ namespace sick_scan
     bool useSafetyPasWD;
     int8_t encoderMode;
     bool CartographerCompatibility;
-    bool scanMirrored;
+    bool scanMirroredAndShifted;
   };
 
 
