@@ -774,10 +774,10 @@ namespace sick_scan
                                         sensor_msgs::LaserScan &msg, int &numEchos, int &echoMask)
   {
     // echoMask introduced to get a workaround for cfg bug using MRS1104
-    ros::NodeHandle tmpParam("~");
+		// ros::NodeHandle tmpParam("~");
     bool dumpData = false;
     int verboseLevel = 0;
-    tmpParam.getParam("verboseLevel", verboseLevel);
+		// tmpParam.getParam("verboseLevel", verboseLevel);
 
     int HEADER_FIELDS = 32;
     char *cur_field;
@@ -1006,7 +1006,7 @@ namespace sick_scan
     // ROS_DEBUG("measurement_freq: %d, time_increment: %f", measurement_freq, msg.time_increment);
 
     // 18: Number of encoders (0)
-    // 19: Number of 16 bit channels (1)verbose
+    // 19: Number of 16 bit channels (1)
     // 20: Measured data contents (DIST1)
 
     // 21: Scaling factor (3F800000)
@@ -1083,7 +1083,7 @@ namespace sick_scan
 #endif
     // ----- consistency check
 
-    this->checkScanTiming(msg.time_increment, msg.scan_time, msg.angle_increment, 0.00001);
+    this->checkScanTiming(msg.time_increment, msg.scan_time, msg.angle_increment, 0.00001f);
     return ExitSuccess;
   }
 
