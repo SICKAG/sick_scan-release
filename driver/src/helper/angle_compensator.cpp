@@ -58,6 +58,15 @@
 *
 */
 
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#ifndef _USE_MATH_DEFINES // to ensure that M_PI is defined
+#define _USE_MATH_DEFINES
+#endif
+
+
 #include "sick_scan/helper/angle_compensator.h"
 #include <string>
 #include <vector>
@@ -65,6 +74,9 @@
 #include <iostream>
 #include <math.h>
 #include <assert.h>
+#include <string.h>
+#include <memory.h>
+
 
 using namespace std;
 
@@ -150,7 +162,7 @@ double AngleCompensator::compensateAngleInRad(double angleInRad)
     sign = -1;
   }
   //angleInRad *= sign;
-  double angleCompInRad = angleInRad + deg2radFactor * amplCorr * sin(angleInRad + sign * phaseCorrInRad) + offsetCorrInRad;
+  double angleCompInRad = angleInRad - sign * deg2radFactor * amplCorr * sin(angleInRad + sign * phaseCorrInRad)-sign * offsetCorrInRad;
   return(angleCompInRad);
 }
 
@@ -171,7 +183,7 @@ double AngleCompensator::compensateAngleInDeg(double angleInDeg)
   double deg2radFactor = 0.01745329252; // pi/180 deg - see for example: https://www.rapidtables.com/convert/number/degrees-to-radians.html
   double angleRawInRad = deg2radFactor * angleInDeg;
   double phaseCorrInRad= deg2radFactor * phaseCorrInDeg;
-  angleCompInDeg = angleInDeg + amplCorr * sin(angleRawInRad + sign * phaseCorrInRad) + offsetCorrInDeg;
+  angleCompInDeg = angleInDeg - sign * amplCorr * sin(angleRawInRad + sign * phaseCorrInRad) - sign * offsetCorrInDeg;
   return(angleCompInDeg);
 }
 
@@ -262,7 +274,7 @@ int AngleCompensator::parseReply(bool isBinary, std::vector<unsigned char>& repl
   if (isBinary) // convert binary message into the ASCII format to reuse parsing algorithm
   {
     stmp = "";
-    int sLen = replyVec.size();
+    int sLen = (int)replyVec.size();
     assert((sLen == 40) || (sLen == 36));
 
     switch(sLen)
@@ -331,9 +343,22 @@ std::string AngleCompensator::getHumanReadableFormula(void)
 {
   char szDummy[1024] = {0};
   std::string s;
+  char szLidarFamily[255] = { 0 };
+  // useNegSign = True ---> NAV3xx
+  // useNegSign = False --> NAV2xx
 
-  sprintf(szDummy,"Angle[comp.] = Angle[Raw] + %8.6lf * sin(Angle[Raw] %c %8.6lf [deg]) +  %8.6lf",
-          amplCorr, useNegSign ? '-' : '+', phaseCorrInDeg, offsetCorrInDeg);
+  if (useNegSign == true)
+  {
+      strcpy(szLidarFamily, "NAV3xx");
+  }
+  else
+  {
+      strcpy(szLidarFamily, "NAV210/NAV245");
+
+  }
+  sprintf(szDummy,"Formula allowed for: %-20s Angle[comp.] = Angle[Raw] %c %8.6lf * sin(Angle[Raw] %c %8.6lf [deg]) %c  %8.6lf",
+          
+      szLidarFamily, useNegSign ? '+' : '-', amplCorr, useNegSign ? '-' : '+', phaseCorrInDeg, useNegSign ? '+' : '-', offsetCorrInDeg);
 
   s  = szDummy;
   return(s);
@@ -344,13 +369,16 @@ std::string AngleCompensator::getHumanReadableFormula(void)
 */
 void AngleCompensator::testbed()
 {
-  AngleCompensator ac;
   std::vector<unsigned char> testVec;
 
   std::string s = string("sRA MCAngleCompSin ");
 
   for (int iLoop = 0; iLoop < 2; iLoop++)
   {
+
+
+    bool bFlag = (iLoop == 0) ? false : true; // starte mit NAV2xx (iLoop = 0), //
+    AngleCompensator ac(bFlag);
     testVec.clear(); // start with empty test vector
     switch(iLoop)
     {
@@ -373,7 +401,7 @@ void AngleCompensator::testbed()
         }
         break;
       }
-      case 1:
+      case 1: // test for NAV3XX
       {
         unsigned char preFix[8] = {0x02,0x02,0x02,0x02,0x00,0x00,0x00,27};
         for (int i = 0; i < 8; i++)
@@ -403,7 +431,7 @@ void AngleCompensator::testbed()
 
 
 
-
+  AngleCompensator ac(true);
 
   testVec.clear();
   s = "sRA MCAngleCompSin 765 FFFCC9B9 FFFFFF0B";
@@ -415,6 +443,7 @@ void AngleCompensator::testbed()
   ac.parseAsciiReply("sRA MCAngleCompSin 765 FFFCC9B9 FFFFFF0B");
   ac.parseAsciiReply("sRA MCAngleCompSin +1893 -210503 -245");
   FILE *fout = fopen("angle_compensation_debug.csv","w");
+  fprintf(fout,"Formula used: %s\n", ac.getHumanReadableFormula().c_str());
   fprintf(fout,"Input   ;Output  ;Correction\n");
   for (int i =0; i <= 359; i++)
   {
