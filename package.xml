@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>sick_scan</name>
-  <version>1.7.7</version>
+  <version>1.7.8</version>
   <description>
     A ROS driver for the SICK TiM and SICK MRS series of lidars.
     This package is based on the original sick_tim-repository of Martin Günther et al.
@@ -40,7 +40,8 @@
   <exec_depend>rospy</exec_depend>
   <exec_depend>tf</exec_depend>
   <exec_depend>tf2</exec_depend>
-  <exec_depend>perception_pcl</exec_depend>
+  <exec_depend>pcl_conversions</exec_depend>
+  <exec_depend>pcl_ros</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>diagnostic_updater</exec_depend>
   <exec_depend>dynamic_reconfigure</exec_depend>
